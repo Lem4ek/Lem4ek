@@ -79,7 +79,7 @@ async def handle_message(update, context):
     await update.message.reply_text(reply)
 
 if __name__ == '__main__':
-    token = os.getenv("BOT_TOKEN", "")
+    token = os.getenv("8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM", "")
     if not token:
         raise ValueError("Не указан BOT_TOKEN")
 
