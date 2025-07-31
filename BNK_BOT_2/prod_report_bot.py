@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-BOT_TOKEN = "8336432137:AAHAn_rsQnj4LghrgWEV7Xc7ZZrle-MMfmQ"
+BOT_TOKEN = "8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM"
 DATA_FILE = "report_log.csv"
 PLOT_FILE = "report_plot.png"
 data = []
