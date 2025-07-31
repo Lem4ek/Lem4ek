@@ -1,0 +1,17 @@
+name: BNK_BOT_2
+version: "1.0"
+slug: telegram_report_bot
+description: Бот для сбора сменных отчётов по Telegram
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+hassio_api: false
+hassio_role: default
+host_network: true
+options:
+  bot_token: "ВСТАВЬ_ТОКЕН_БОТА_СЮДА"
+schema:
+  bot_token: str
