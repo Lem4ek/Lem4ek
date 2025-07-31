@@ -7,7 +7,7 @@ from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
 import pandas as pd
 
-TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+TELEGRAM_TOKEN = os.environ["8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 HA_URL = os.environ["HA_URL"]
 HA_TOKEN = os.environ["HA_TOKEN"]
