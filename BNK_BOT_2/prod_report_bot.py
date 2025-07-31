@@ -1,110 +1,137 @@
-from telegram import Update, ChatMember, InputFile
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import logging
 import os
-import json
+import re
 from datetime import datetime
 import pandas as pd
-from collections import defaultdict
-import re
+import matplotlib.pyplot as plt
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
-# 🔧 Настройка логов
-logging.basicConfig(level=logging.INFO)
+# Хранилище данных
+data = []
 
-TOKEN = "8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM"
+# Парсинг строки
+def parse_message(message: str) -> dict:
+    result = {
+        "timestamp": datetime.now(),
+        "pack": None,
+        "weight": None,
+        "packetosvarka": None,
+        "flexo": None,
+        "extrusion": None,
+        "total_waste": None,
+    }
 
-HISTORY_FILE = "report_full_history.json"
-EXCEL_FILE = "report_log.xlsx"
+    lines = message.lower().splitlines()
 
-def load_history():
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_history(history):
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, ensure_ascii=False, indent=2)
-
-async def is_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    chat = update.effective_chat
-    user = update.effective_user
-    if chat.type in ["group", "supergroup"]:
-        member = await context.bot.get_chat_member(chat.id, user.id)
-        return member.status in [ChatMember.ADMINISTRATOR, ChatMember.OWNER]
-    return True
-
-def parse_report(text):
-    result = {}
-    lines = text.strip().splitlines()
     for line in lines:
-        line = line.lower()
         if "паков" in line:
-            result["Паков"] = int(re.findall(r"\d+", line)[-1])
+            match = re.search(r"паков\s*[-–:]?\s*(\d+)", line)
+            if match:
+                result["pack"] = int(match.group(1))
         elif "вес" in line:
-            result["Вес"] = int(re.findall(r"\d+", line)[-1])
+            match = re.search(r"вес\s*[-–:]?\s*(\d+)", line)
+            if match:
+                result["weight"] = int(match.group(1))
         elif "пакетосварка" in line:
-            result["Пакетосварка"] = int(re.findall(r"\d+", line)[-1])
-        elif "флексо" in line or "флекса" in line or "флексография" in line:
-            result["Флекса"] = int(re.findall(r"\d+", line)[-1])
+            match = re.search(r"пакетосварка\s*[-–:]?\s*(\d+)", line)
+            if match:
+                result["packetosvarka"] = int(match.group(1))
+        elif "флекс" in line or "флексография" in line:
+            match = re.search(r"(флексография|флекса)\s*[-–:]?\s*(\d+)", line)
+            if match:
+                result["flexo"] = int(match.group(2))
         elif "экструзия" in line:
-            числа = list(map(int, re.findall(r"\d+", line)))
-            result["Экструзия"] = sum(числа)
+            match = re.findall(r"\d+", line)
+            if match:
+                result["extrusion"] = sum(map(int, match))
         elif "итого" in line:
-            result["Итого"] = int(re.findall(r"\d+", line)[-1])
+            match = re.search(r"итого\s*[-–:]?\s*(\d+)", line)
+            if match:
+                result["total_waste"] = int(match.group(1))
+
     return result
 
-def aggregate_reports(reports):
-    total = defaultdict(int)
-    for rep in reports:
-        for k, v in rep.items():
-            total[k] += v
-    return total
 
+# Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    chat_id = str(update.effective_chat.id)
-    user = update.effective_user.username or update.effective_user.first_name
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    report = parse_report(text)
-    if not report:
+    parsed = parse_message(update.message.text)
+    data.append(parsed)
+    await update.message.reply_text("Данные сохранены ✅")
+
+
+# Команда /reset
+async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global data
+    data = []
+    await update.message.reply_text("Данные сброшены 🔄")
+
+
+# Команда /excel
+async def excel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not data:
+        await update.message.reply_text("Нет данных для экспорта.")
         return
 
-    history = load_history()
-    history.setdefault(chat_id, [])
-    history[chat_id].append(report)
-    save_history(history)
+    df = pd.DataFrame(data)
+    filename = "report.xlsx"
+    df.to_excel(filename, index=False)
 
-    row = {"user": user, "timestamp": timestamp, **report}
-    df_new = pd.DataFrame([row])
-    if os.path.exists(EXCEL_FILE):
-        df_old = pd.read_excel(EXCEL_FILE)
-        df_combined = pd.concat([df_old, df_new], ignore_index=True)
-    else:
-        df_combined = df_new
-    df_combined.to_excel(EXCEL_FILE, index=False)
+    with open(filename, "rb") as f:
+        await update.message.reply_document(document=f)
 
-    total = aggregate_reports(history[chat_id])
-    msg = "\n".join(f"{k}: {v}" for k, v in total.items())
-    await update.message.reply_text(f"Общий отчёт:\n{msg}")
+    os.remove(filename)
 
-async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await is_admin(update, context):
-        return await update.message.reply_text("⛔ Только админ может сбросить данные.")
-    chat_id = str(update.effective_chat.id)
-    history = load_history()
-    history[chat_id] = []
-    save_history(history)
-    await update.message.reply_text("✅ История сброшена.")
 
-async def excel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if os.path.exists(EXCEL_FILE):
-        await update.message.reply_document(document=InputFile(EXCEL_FILE))
-    else:
-        await update.message.reply_text("Файл Excel ещё не создан.")
+# Команда /plot
+async def plot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not data:
+        await update.message.reply_text("Нет данных для построения графика.")
+        return
 
+    df = pd.DataFrame(data)
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+    plt.figure()
+    plt.plot(df["timestamp"], df["pack"], label="Паков")
+    plt.plot(df["timestamp"], df["total_waste"], label="Отходы")
+    plt.xlabel("Время")
+    plt.ylabel("Количество")
+    plt.title("Производство и отходы")
+    plt.legend()
+    plt.tight_layout()
+
+    image_file = "plot.png"
+    plt.savefig(image_file)
+    plt.close()
+
+    with open(image_file, "rb") as f:
+        await update.message.reply_photo(f)
+
+    os.remove(image_file)
+
+
+# Главный запуск
 def main():
+    TOKEN = os.getenv("8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM")
+    if not TOKEN:
+        print("Ошибка: не задан BOT_TOKEN в переменных окружения.")
+        return
+
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("reset", reset_command))
-    app.add_handle_
+    app.add_handler(CommandHandler("excel", excel_command))
+    app.add_handler(CommandHandler("plot", plot_command))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()
