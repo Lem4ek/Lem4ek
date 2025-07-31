@@ -1,6 +1,6 @@
 {
   "name": "BNK_BOT_2",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "slug": "telegram_bot",
   "description": "Сбор и анализ производственных отчётов через Telegram",
   "startup": "application",
