@@ -2,7 +2,7 @@ import logging
 import os
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-from bot.utils import extract_data, format_report, append_to_csv, load_users, save_users, get_stats
+from utils import extract_data, format_report, append_to_csv, load_users, save_users, get_stats
 
 TOKEN = os.getenv("8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM")
 if not TOKEN:
