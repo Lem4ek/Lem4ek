@@ -6,6 +6,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY run.sh .
 RUN chmod +x run.sh
-COPY bot/ ./bot/
+COPY bot/ ./
 
 CMD ["./run.sh"]
