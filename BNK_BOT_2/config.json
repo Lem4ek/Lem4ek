@@ -1,0 +1,21 @@
+{
+  "name": "Telegram Parser Bot",
+  "version": "1.0",
+  "slug": "telegram_parser_bot",
+  "description": "Парсит сменные отчёты из Telegram и передаёт в Home Assistant",
+  "startup": "application",
+  "boot": "auto",
+  "options": {
+    "telegram_token": "",
+    "allowed_chat_id": "",
+    "ha_url": "http://homeassistant.local:8123",
+    "ha_token": ""
+  },
+  "schema": {
+    "telegram_token": "str",
+    "allowed_chat_id": "str",
+    "ha_url": "str",
+    "ha_token": "str"
+  },
+  "image": "local/telegram_parser_bot"
+}
