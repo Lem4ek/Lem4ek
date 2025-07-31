@@ -9,7 +9,7 @@ CONFIG_PATH = "/data/options.json"
 with open(CONFIG_PATH, "r") as f:
     options = json.load(f)
 
-TOKEN = options.get("telegram_token")
+TOKEN = options.get("8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM")
 if not TOKEN:
     raise ValueError("TELEGRAM_TOKEN is required in config")
 
