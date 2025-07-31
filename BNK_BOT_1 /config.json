@@ -1,0 +1,15 @@
+{
+  "name": "BNK_BOT_1",
+  "version": "1.0.0",
+  "slug": "telegram_bot_reports",
+  "description": "Сбор и анализ отчётов в чат производства",
+  "startup": "application",
+  "boot": "auto",
+  "init": false,
+  "hassio_api": false,
+  "homeassistant_api": false,
+  "arch": ["aarch64", "armv7", "amd64"],
+  "map": ["config:rw"],
+  "options": {},
+  "schema": {}
+}
