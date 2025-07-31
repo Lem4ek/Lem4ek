@@ -7,6 +7,5 @@
   "startup": "application",
   "boot": "auto",
   "options": {},
-  "schema": {},
-  "image": "local/bnk_bot"
+  "schema": {}
 }
