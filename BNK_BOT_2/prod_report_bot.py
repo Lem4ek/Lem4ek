@@ -1,4 +1,3 @@
-
 from telegram import Update, ChatMember, InputFile
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
 import re
@@ -8,9 +7,7 @@ from datetime import datetime
 from collections import defaultdict
 import pandas as pd
 import logging
-import asyncio
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
 HISTORY_FILE = "report_full_history.json"
@@ -163,7 +160,8 @@ async def excel_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logging.error("Exception while handling an update:", exc_info=context.error)
 
-async def main():
+# ⛔️ Не используем asyncio.run()
+def main():
     TOKEN = "8199873882:AAE4x2ARLf7bR0fC9ykeOyHsrinT9JPIdRM"
     app = ApplicationBuilder().token(TOKEN).build()
 
@@ -173,19 +171,8 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
     app.add_error_handler(error_handler)
 
-    await app.run_polling()
+    # Запуск без asyncio.run()
+    app.run_polling()
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    try:
-        loop.run_until_complete(main())
-    except RuntimeError as e:
-        if "already running" in str(e):
-            asyncio.create_task(main())
-        else:
-            raise
+    main()
